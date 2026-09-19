@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ekspedisi Nusantara — Jejak Kolonialisme</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Spectral:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy-deep:#0b121a;
+    --navy:#152230;
+    --navy-light:#22384a;
+    --parchment:#ecdfc0;
+    --parchment-dark:#d9c79c;
+    --ink:#2a1d12;
+    --ink-soft:#4a3a26;
+    --gold:#c9973b;
+    --gold-bright:#e3b45c;
+    --rust:#a4462d;
+    --rust-bright:#c85a3c;
+    --teal:#3f7d6e;
+    --teal-bright:#57a892;
+    --line: rgba(236,223,192,0.18);
+    --serif-display:'Cinzel', 'Iowan Old Style', Georgia, serif;
+    --serif-body:'Spectral', Georgia, 'Times New Roman', serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(ellipse at 20% 0%, #1c2f40 0%, transparent 55%),
+      radial-gradient(ellipse at 85% 100%, #16283a 0%, transparent 50%),
+      var(--navy-deep);
+    color:var(--parchment);
+    font-family:var(--serif-body);
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;}
+  button{font-family:inherit;cursor:pointer;}
+  ::selection{background:var(--gold);color:var(--ink);}
+
+  /* ---------- layout shell ---------- */
+  #app{max-width:1000px;margin:0 auto;padding:18px 16px 60px;}
+
+  header.topbar{
+    display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;
+    background:linear-gradient(180deg, var(--navy-light), var(--navy));
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:14px 18px;
+    margin-bottom:22px;
+  }
+  .brand{display:flex;align-items:center;gap:12px;}
+  .brand .mark{font-size:28px;line-height:1;}
+  .brand h1{
+    font-family:var(--serif-display);
+    font-size:1.05rem;
+    letter-spacing:.03em;
+    margin:0;
+    color:var(--parchment);
+  }
+  .brand .sub{font-size:.72rem;color:var(--parchment-dark);opacity:.8;margin-top:2px;}
+
+  .stats{display:flex;flex-wrap:wrap;gap:16px;align-items:center;}
+  .stat{min-width:120px;}
+  .stat .label{font-size:.66rem;color:var(--parchment-dark);display:flex;justify-content:space-between;margin-bottom:3px;opacity:.85;}
+  .bar{height:8px;border-radius:5px;background:rgba(0,0,0,.35);overflow:hidden;border:1px solid rgba(236,223,192,.15);}
+  .bar > div{height:100%;border-radius:5px;transition:width .4s ease;}
+  .bar.hp > div{background:linear-gradient(90deg,var(--rust),var(--rust-bright));}
+  .bar.energy > div{background:linear-gradient(90deg,var(--teal),var(--teal-bright));}
+  .bar.xp > div{background:linear-gradient(90deg,var(--gold),var(--gold-bright));}
+  .stat.gold{display:flex;align-items:center;gap:6px;font-family:var(--serif-display);font-size:.95rem;color:var(--gold-bright);}
+  .stat.level{font-family:var(--serif-display);font-size:.8rem;color:var(--parchment);background:rgba(0,0,0,.25);padding:6px 10px;border-radius:7px;border:1px solid var(--line);}
+
+  /* ---------- screens ---------- */
+  .screen{display:none;}
+  .screen.active{display:block;animation:fadein .35s ease;}
+  @keyframes fadein{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+
+  /* ---------- HUB / MAP ---------- */
+  .hub-intro{
+    background:rgba(21,34,48,.55);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:16px 20px;
+    margin-bottom:20px;
+    font-size:.92rem;
+    line-height:1.55;
+    color:var(--parchment-dark);
+  }
+  .hub-intro strong{color:var(--gold-bright);}
+
+  .map-wrap{
+    position:relative;
+    background:
+      repeating-linear-gradient(115deg, rgba(255,255,255,0.02) 0 2px, transparent 2px 60px),
+      linear-gradient(160deg, #0e1c28, #17293a 55%, #0e1c28);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:26px 18px 34px;
+    overflow:hidden;
+  }
+  .map-wrap svg.route{position:absolute;inset:0;width:100%;height:100%;}
+  .ports{position:relative;display:flex;flex-wrap:wrap;gap:22px 4px;justify-content:space-between;z-index:2;}
+  .port{
+    flex:1 1 140px;max-width:160px;
+    display:flex;flex-direction:column;align-items:center;gap:8px;
+    padding:14px 10px 12px;
+    text-align:center;
+    background:rgba(11,18,26,.55);
+    border:1px solid var(--line);
+    border-radius:12px;
+    transition:transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+  }
+  .port.unlocked{cursor:pointer;}
+  .port.unlocked:hover{transform:translateY(-3px);border-color:var(--gold);box-shadow:0 6px 18px rgba(0,0,0,.35);}
+  .port .node{
+    width:46px;height:46px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;font-size:1.3rem;
+    background:radial-gradient(circle at 35% 30%, var(--navy-light), var(--navy-deep));
+    border:2px solid var(--gold);
+    color:var(--gold-bright);
+  }
+  .port.cleared .node{border-color:var(--teal-bright);background:radial-gradient(circle at 35% 30%, #1c3d34, #0e1c17);color:var(--teal-bright);}
+  .port.locked .node{border-color:#3a4552;color:#5a6674;background:#141c24;}
+  .port .num{font-family:var(--serif-display);font-size:.62rem;letter-spacing:.1em;color:var(--parchment-dark);}
+  .port .name{font-family:var(--serif-display);font-size:.74rem;line-height:1.25;color:var(--parchment);}
+  .port.locked .name{color:#5a6674;}
+  .port .tag{font-size:.62rem;padding:2px 8px;border-radius:20px;border:1px solid var(--line);color:var(--parchment-dark);}
+  .port.cleared .tag{border-color:var(--teal-bright);color:var(--teal-bright);}
+  .port.locked .tag{color:#5a6674;}
+
+  /* ---------- panels (logbook / quiz / boss) ---------- */
+  .panel-header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+  .btn{
+    border:1px solid var(--line);
+    background:rgba(236,223,192,.06);
+    color:var(--parchment);
+    padding:9px 16px;
+    border-radius:8px;
+    font-size:.85rem;
+    transition:background .15s ease, border-color .15s ease;
+  }
+  .btn:hover:not(:disabled){background:rgba(236,223,192,.14);border-color:var(--gold);}
+  .btn:disabled{opacity:.4;cursor:not-allowed;}
+  .btn.primary{background:linear-gradient(180deg,var(--gold),#a97c2c);color:#241a0c;border-color:#a97c2c;font-weight:600;}
+  .btn.primary:hover:not(:disabled){filter:brightness(1.08);}
+  .btn.danger{background:linear-gradient(180deg,var(--rust),#7d331e);color:#fff0e8;border-color:#7d331e;font-weight:600;}
+
+  .logbook{
+    background:linear-gradient(180deg, var(--parchment), var(--parchment-dark));
+    color:var(--ink);
+    border-radius:12px;
+    padding:26px 28px;
+    box-shadow:0 12px 30px rgba(0,0,0,.35);
+    line-height:1.68;
+  }
+  .logbook h2{font-family:var(--serif-display);font-size:1.35rem;margin:0 0 4px;color:var(--ink);}
+  .logbook .eyebrow{font-size:.72rem;color:var(--ink-soft);margin-bottom:14px;}
+  .logbook h4{font-family:var(--serif-display);font-size:1rem;margin:20px 0 8px;color:var(--rust);}
+  .logbook p{margin:0 0 10px;font-size:.95rem;}
+  .logbook ul{margin:0 0 10px;padding-left:20px;}
+  .logbook li{margin-bottom:6px;font-size:.93rem;}
+  .logbook .figures{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:10px 0 6px;}
+  @media (max-width:560px){.logbook .figures{grid-template-columns:1fr;}}
+  .figure-card{background:rgba(42,29,18,.06);border:1px solid rgba(42,29,18,.18);border-radius:8px;padding:10px 12px;}
+  .figure-card .who{font-weight:600;font-size:.88rem;color:var(--rust);margin-bottom:3px;}
+  .figure-card .what{font-size:.85rem;}
+  .causal{
+    background:rgba(63,125,110,.12);
+    border-left:4px solid var(--teal);
+    border-radius:6px;
+    padding:12px 16px;
+    margin:16px 0;
+    font-size:.9rem;
+  }
+  .causal .lbl{font-family:var(--serif-display);font-size:.68rem;letter-spacing:.06em;color:var(--teal);display:block;margin-bottom:6px;}
+  .causal .chain{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:.88rem;}
+  .causal .chain span.step{background:rgba(63,125,110,.15);border-radius:5px;padding:3px 8px;}
+  .causal .chain span.arrow{color:var(--teal);font-weight:700;}
+
+  .quest-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;flex-wrap:wrap;}
+
+  /* ---------- quiz ---------- */
+  .battle-card{
+    background:rgba(21,34,48,.6);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:22px 22px 20px;
+  }
+  .progress-row{display:flex;justify-content:space-between;align-items:center;font-size:.78rem;color:var(--parchment-dark);margin-bottom:14px;}
+  .qtext{font-family:var(--serif-display);font-size:1.02rem;line-height:1.5;color:var(--parchment);margin:0 0 18px;}
+  .opts{display:flex;flex-direction:column;gap:10px;}
+  .opt{
+    text-align:left;
+    background:rgba(236,223,192,.05);
+    border:1px solid var(--line);
+    color:var(--parchment);
+    padding:12px 14px;
+    border-radius:9px;
+    font-size:.9rem;
+    line-height:1.45;
+  }
+  .opt:hover:not(:disabled){border-color:var(--gold);background:rgba(236,223,192,.1);}
+  .opt.correct{border-color:var(--teal-bright);background:rgba(63,125,110,.28);}
+  .opt.wrong{border-color:var(--rust-bright);background:rgba(164,70,45,.28);}
+  .opt:disabled{cursor:default;}
+  .feedback{
+    margin-top:16px;padding:14px 16px;border-radius:9px;font-size:.88rem;line-height:1.55;
+    background:rgba(0,0,0,.25);border:1px solid var(--line);
+  }
+  .feedback .verdict{font-family:var(--serif-display);font-size:.85rem;margin-bottom:6px;}
+  .feedback .verdict.ok{color:var(--teal-bright);}
+  .feedback .verdict.no{color:var(--rust-bright);}
+  .deltas{display:flex;gap:12px;margin-top:10px;font-size:.76rem;color:var(--parchment-dark);flex-wrap:wrap;}
+
+  /* ---------- boss ---------- */
+  .boss-head{display:flex;justify-content:space-between;gap:18px;margin-bottom:18px;flex-wrap:wrap;}
+  .combatant{flex:1 1 200px;}
+  .combatant .cname{font-family:var(--serif-display);font-size:.85rem;margin-bottom:5px;display:flex;justify-content:space-between;}
+  .combatant.enemy .cname{color:var(--rust-bright);}
+  .combatant.player .cname{color:var(--teal-bright);}
+
+  /* ---------- overlay modal ---------- */
+  .overlay{position:fixed;inset:0;background:rgba(4,8,12,.72);display:none;align-items:center;justify-content:center;z-index:50;padding:16px;}
+  .overlay.active{display:flex;}
+  .modal{
+    background:linear-gradient(180deg, var(--navy-light), var(--navy));
+    border:1px solid var(--gold);
+    border-radius:14px;
+    padding:26px 26px 22px;
+    max-width:420px;width:100%;
+    text-align:center;
+    box-shadow:0 20px 50px rgba(0,0,0,.5);
+  }
+  .modal .icon{font-size:2.4rem;margin-bottom:6px;}
+  .modal h3{font-family:var(--serif-display);margin:0 0 8px;font-size:1.15rem;}
+  .modal p{font-size:.88rem;color:var(--parchment-dark);line-height:1.5;margin:0 0 18px;}
+  .modal .rewards{display:flex;justify-content:center;gap:16px;margin-bottom:18px;font-size:.82rem;color:var(--gold-bright);}
+
+  .toast{
+    position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(-30px);
+    background:var(--gold);color:#241a0c;padding:9px 18px;border-radius:30px;
+    font-family:var(--serif-display);font-size:.78rem;opacity:0;transition:all .35s ease;z-index:80;
+    box-shadow:0 8px 20px rgba(0,0,0,.35);
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  .backlink{display:inline-flex;align-items:center;gap:6px;font-size:.8rem;color:var(--parchment-dark);background:none;border:none;padding:0;margin-bottom:12px;}
+  .backlink:hover{color:var(--gold-bright);}
+
+  footer.note{text-align:center;font-size:.7rem;color:var(--parchment-dark);opacity:.6;margin-top:30px;}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="mark">🧭</div>
+      <div>
+        <h1>Ekspedisi Nusantara</h1>
+        <div class="sub">Jejak Kolonialisme &amp; Imperialisme di Indonesia</div>
+      </div>
+    </div>
+    <div class="stats">
+      <div class="stat level" id="statLevel">Pangkat 1</div>
+      <div class="stat">
+        <div class="label"><span>XP</span><span id="xpText">0/80</span></div>
+        <div class="bar xp"><div id="xpBar" style="width:0%"></div></div>
+      </div>
+      <div class="stat">
+        <div class="label"><span>Ketahanan</span><span id="hpText">100/100</span></div>
+        <div class="bar hp"><div id="hpBar" style="width:100%"></div></div>
+      </div>
+      <div class="stat">
+        <div class="label"><span>Semangat</span><span id="enText">100/100</span></div>
+        <div class="bar energy"><div id="enBar" style="width:100%"></div></div>
+      </div>
+      <div class="stat gold">🪙 <span id="goldText">0</span></div>
+    </div>
+  </header>
+
+  <!-- ===================== HUB ===================== -->
+  <section class="screen active" id="screen-hub">
+    <div class="hub-intro">
+      Selamat datang di geladak kapal, Pelaut. Ini <strong>Peta Ekspedisi</strong>-mu: enam babak sejarah kolonialisme dan
+      imperialisme di Nusantara, dari layar pertama yang membelah Samudra Atlantik hingga letusan perlawanan rakyat di
+      berbagai penjuru negeri. Buka <em>Buku Catatan</em> tiap pelabuhan untuk membaca materinya, lalu buktikan pemahamanmu
+      lewat <em>Tantangan</em> dan taklukkan <em>Pertempuran Puncak</em> untuk membuka pelabuhan berikutnya.
+    </div>
+    <div class="map-wrap">
+      <svg class="route" viewBox="0 0 1000 140" preserveAspectRatio="none">
+        <path d="M40,90 C 200,20 300,150 480,80 S 760,10 960,90" fill="none" stroke="#c9973b" stroke-width="2" stroke-dasharray="2 10" stroke-linecap="round" opacity="0.55"/>
+      </svg>
+      <div class="ports" id="portsWrap"></div>
+    </div>
+  </section>
+
+  <!-- ===================== LOGBOOK (NOTES) ===================== -->
+  <section class="screen" id="screen-notes">
+    <button class="backlink" onclick="goHub()">← Kembali ke Peta</button>
+    <div class="logbook" id="logbookContent"></div>
+    <div class="quest-actions">
+      <button class="btn" onclick="goHub()">Kembali</button>
+      <button class="btn primary" id="btnStartQuiz">Mulai Tantangan (butuh 20 Semangat) →</button>
+    </div>
+  </section>
+
+  <!-- ===================== QUIZ ===================== -->
+  <section class="screen" id="screen-quiz">
+    <button class="backlink" onclick="goHub()">← Kembali ke Peta</button>
+    <div class="battle-card">
+      <div class="progress-row">
+        <span id="quizChapterName"></span>
+        <span id="quizProgress"></span>
+      </div>
+      <p class="qtext" id="quizQuestionText"></p>
+      <div class="opts" id="quizOpts"></div>
+      <div class="feedback" id="quizFeedback" style="display:none;"></div>
+      <div class="quest-actions">
+        <button class="btn primary" id="quizNextBtn" style="display:none;">Lanjut →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== QUIZ SUMMARY ===================== -->
+  <section class="screen" id="screen-summary">
+    <div class="battle-card" style="text-align:center;">
+      <div style="font-size:2rem;margin-bottom:6px;">📜</div>
+      <h2 style="font-family:var(--serif-display);font-size:1.2rem;margin:0 0 6px;" id="summaryTitle"></h2>
+      <p style="color:var(--parchment-dark);margin:0 0 18px;" id="summaryDesc"></p>
+      <div class="quest-actions" style="justify-content:center;">
+        <button class="btn" onclick="goHub()">Kembali ke Peta</button>
+        <button class="btn danger" id="btnGoBoss" style="display:none;">Hadapi Pertempuran Puncak ⚔️</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== BOSS ===================== -->
+  <section class="screen" id="screen-boss">
+    <button class="backlink" onclick="goHub()">← Mundur ke Peta</button>
+    <div class="battle-card">
+      <div class="boss-head">
+        <div class="combatant enemy">
+          <div class="cname"><span id="bossName"></span><span id="bossHpText"></span></div>
+          <div class="bar hp"><div id="bossHpBar" style="width:100%"></div></div>
+        </div>
+        <div class="combatant player">
+          <div class="cname"><span>Kapalmu</span><span id="playerHpText"></span></div>
+          <div class="bar hp"><div id="playerHpBar" style="width:100%"></div></div>
+        </div>
+      </div>
+      <div class="progress-row">
+        <span>Pertempuran Puncak</span>
+        <span id="bossProgress"></span>
+      </div>
+      <p class="qtext" id="bossQuestionText"></p>
+      <div class="opts" id="bossOpts"></div>
+      <div class="feedback" id="bossFeedback" style="display:none;"></div>
+      <div class="quest-actions">
+        <button class="btn primary" id="bossNextBtn" style="display:none;">Lanjut →</button>
+      </div>
+    </div>
+  </section>
+
+  <footer class="note">Progres tersimpan otomatis di perangkat ini. Selamat berlayar menembus arsip sejarah!</footer>
+</div>
+
+<!-- overlay modal -->
+<div class="overlay" id="overlay">
+  <div class="modal" id="modalBox"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   DATA MATERI
+   ============================================================ */
+const CHAPTERS = [
+{
+  id:1, icon:"🧭", title:"Penjelajahan Samudra",
+  subtitle:"Portugis, Spanyol & Perjanjian Dunia",
+  notes:`
+    <span class="eyebrow">BABAK I — PELABUHAN PERTAMA</span>
+    <h2>Penjelajahan Samudra: Portugis, Spanyol, dan Pembagian Dunia</h2>
+    <p>Sebelum kapal-kapal Eropa pertama membelah Samudra Hindia menuju Nusantara, sejarah dunia lebih dulu diguncang oleh satu
+    peristiwa di ujung barat Asia: <strong>jatuhnya Konstantinopel ke tangan Turki Usmani pada tahun 1453</strong>. Peristiwa ini
+    memutus jalur perdagangan rempah-rempah yang selama berabad-abad mengalir dari Asia ke Eropa lewat Laut Tengah. Harga
+    rempah di Eropa melambung, dan para pedagang serta raja-raja Eropa pun terdorong mencari jalur laut baru langsung menuju
+    "tanah asal" rempah — Kepulauan Nusantara.</p>
+
+    <h4>Faktor Pendorong: Semboyan 3G</h4>
+    <ul>
+      <li><strong>Gold</strong> — mencari kekayaan lewat emas dan komoditas berharga, terutama rempah-rempah (lada, cengkih, pala) yang di Eropa bernilai setara emas.</li>
+      <li><strong>Gospel</strong> — menyebarkan agama Nasrani ke wilayah-wilayah baru, sekaligus melanjutkan semangat Perang Salib.</li>
+      <li><strong>Glory</strong> — mengejar kejayaan, nama besar, dan kekuasaan atas wilayah-wilayah baru yang ditemukan.</li>
+    </ul>
+    <p>Semangat ini semakin mungkin diwujudkan berkat kemajuan teknologi navigasi: <em>kompas</em> untuk penunjuk arah,
+    <em>peta portolan</em> yang makin akurat, serta kapal <em>caravel</em> yang lebih tangguh mengarungi samudra terbuka.</p>
+
+    <div class="causal">
+      <span class="lbl">RANGKAIAN SEBAB–AKIBAT</span>
+      <div class="chain">
+        <span class="step">Konstantinopel jatuh (1453)</span><span class="arrow">→</span>
+        <span class="step">Jalur rempah lewat Laut Tengah terputus</span><span class="arrow">→</span>
+        <span class="step">Harga rempah di Eropa melonjak</span><span class="arrow">→</span>
+        <span class="step">Dicari jalur laut langsung ke Asia (3G + teknologi navigasi)</span><span class="arrow">→</span>
+        <span class="step">Penjelajahan samudra Portugis &amp; Spanyol</span>
+      </div>
+    </div>
+
+    <h4>Perjanjian Tordesilas (1494)</h4>
+    <p>Persaingan Portugis dan Spanyol dalam berlayar ke arah yang berlawanan berpotensi memicu bentrok. Untuk meredakannya,
+    <strong>Paus Alexander VI</strong> menjadi penengah dan lahirlah <strong>Perjanjian Tordesilas tahun 1494</strong>: dunia
+    di luar Eropa dibagi dua oleh sebuah garis demarkasi yang membentang dari kutub ke kutub, kira-kira 370 liga di sebelah
+    barat Kepulauan Tanjung Verde. Wilayah di sebelah <strong>barat garis menjadi hak Spanyol</strong>, sedangkan wilayah di
+    sebelah <strong>timur garis menjadi hak Portugis</strong>. Inilah dasar mengapa Spanyol berlayar ke arah barat (menyeberangi
+    Atlantik) sementara Portugis berlayar ke arah timur (menyusuri Afrika).</p>
+
+    <h4>Perjanjian Saragosa (1529)</h4>
+    <p>Karena Bumi berbentuk bulat, kedua kerajaan yang berlayar berlawanan arah itu akhirnya <strong>bertemu kembali di
+    kawasan yang sama: Kepulauan Maluku</strong>, sang penghasil rempah termahal dunia. Perebutan pengaruh di Maluku memicu
+    sengketa baru, yang kemudian diselesaikan lewat <strong>Perjanjian Saragosa tahun 1529</strong>. Perjanjian ini menetapkan
+    garis demarkasi kedua di sekitar Kepulauan Maluku: Portugis mendapat hak atas jalur ke arah Asia (termasuk Maluku),
+    sedangkan Spanyol harus mundur dan memusatkan wilayahnya di Filipina.</p>
+    <div class="causal">
+      <span class="lbl">MENGAPA MALUKU JADI TITIK TEMU?</span>
+      <div class="chain">
+        <span class="step">Portugis ke timur, Spanyol ke barat</span><span class="arrow">→</span>
+        <span class="step">Bumi berbentuk bulat</span><span class="arrow">→</span>
+        <span class="step">Kedua rute bertemu di kepulauan rempah (Maluku)</span><span class="arrow">→</span>
+        <span class="step">Sengketa wilayah</span><span class="arrow">→</span>
+        <span class="step">Perjanjian Saragosa (1529)</span>
+      </div>
+    </div>
+
+    <h4>Tokoh &amp; Rute Pelayaran</h4>
+    <div class="figures">
+      <div class="figure-card"><div class="who">🇵🇹 Vasco da Gama</div><div class="what">Mengitari Tanjung Harapan (ujung selatan Afrika) dan menjadi orang Eropa pertama yang mencapai Kalkuta, India (1498), membuka jalur laut langsung Eropa–Asia.</div></div>
+      <div class="figure-card"><div class="who">🇵🇹 Alfonso de Albuquerque</div><div class="what">Menaklukkan Malaka pada 1511 — pelabuhan kunci jalur rempah — sehingga Portugis menguasai gerbang menuju Nusantara.</div></div>
+      <div class="figure-card"><div class="who">🇵🇹 Francisco Serrão</div><div class="what">Kapalnya karam dan terdampar hingga mencapai Maluku, lalu menjalin hubungan dagang dengan Kesultanan Ternate.</div></div>
+      <div class="figure-card"><div class="who">🇪🇸 Christopher Columbus</div><div class="what">Berlayar ke arah barat (1492) untuk mencari Asia, namun justru menemukan benua baru yang kemudian dikenal sebagai Amerika.</div></div>
+      <div class="figure-card"><div class="who">🇪🇸 Ferdinand Magellan</div><div class="what">Memimpin ekspedisi mengelilingi dunia (1519), singgah di Filipina, tetapi tewas dalam pertempuran di Mactan sebelum ekspedisi tuntas.</div></div>
+      <div class="figure-card"><div class="who">🇪🇸 Juan Sebastián Elcano (del Cano)</div><div class="what">Melanjutkan ekspedisi Magellan sepeninggalnya, singgah di Maluku, lalu berhasil kembali ke Spanyol — menjadi orang pertama yang benar-benar menuntaskan pelayaran mengelilingi dunia.</div></div>
+    </div>
+    <p>Pertemuan bangsa Portugis dan Spanyol di Nusantara inilah yang menjadi <strong>pintu masuk awal kolonialisme Barat</strong>
+    di Indonesia — kelak disusul oleh bangsa Belanda yang justru bertahan paling lama.</p>
+  `,
+  quiz:[
+    {q:"Apa peristiwa yang menjadi pemicu utama bangsa Eropa mencari jalur pelayaran baru ke Asia?",
+      opts:["Ditemukannya kompas oleh bangsa Cina","Jatuhnya Konstantinopel ke tangan Turki Usmani tahun 1453","Terjadinya Revolusi Industri di Inggris","Penemuan benua Amerika oleh Columbus"],
+      ans:1, explain:"Jatuhnya Konstantinopel (1453) memutus jalur dagang rempah Eropa–Asia lewat Laut Tengah, sehingga harga rempah melonjak dan mendorong pencarian jalur laut alternatif langsung ke Asia."},
+    {q:"Semboyan 3G yang mendorong penjelajahan samudra terdiri dari...",
+      opts:["Gold, Glory, Government","Gospel, Government, Growth","Gold, Gospel, Glory","Glory, Growth, Government"],
+      ans:2, explain:"3G adalah Gold (kekayaan/rempah), Gospel (penyebaran agama Nasrani), dan Glory (kejayaan serta kekuasaan)."},
+    {q:"Isi pokok Perjanjian Tordesilas (1494) adalah...",
+      opts:["Pembagian hasil rempah Maluku antara Portugis dan Belanda","Pembagian wilayah dunia di luar Eropa menjadi bagian barat untuk Spanyol dan timur untuk Portugis","Larangan Spanyol berlayar ke arah barat","Penyerahan Malaka dari Portugis kepada Spanyol"],
+      ans:1, explain:"Ditengahi Paus Alexander VI, Tordesilas menarik garis demarkasi yang membagi dunia di luar Eropa: barat untuk Spanyol, timur untuk Portugis."},
+    {q:"Mengapa Portugis dan Spanyol akhirnya bertemu kembali di Kepulauan Maluku meski berlayar ke arah berlawanan?",
+      opts:["Keduanya sengaja berlayar ke arah yang sama","Karena Bumi berbentuk bulat sehingga kedua rute yang berlawanan arah bertemu di titik yang sama","Maluku terletak tepat di garis Tordesilas","Salah satu armada salah arah"],
+      ans:1, explain:"Karena Bumi bulat, rute Portugis ke timur dan rute Spanyol ke barat pada akhirnya bertemu di kawasan penghasil rempah, yaitu Maluku — inilah yang melatarbelakangi lahirnya Perjanjian Saragosa."},
+    {q:"Tokoh yang berhasil menaklukkan Malaka pada tahun 1511 dan membuka gerbang Portugis menuju Nusantara adalah...",
+      opts:["Vasco da Gama","Alfonso de Albuquerque","Ferdinand Magellan","Francisco Serrão"],
+      ans:1, explain:"Alfonso de Albuquerque menaklukkan Malaka pada 1511, pelabuhan yang menjadi kunci jalur rempah menuju Nusantara."},
+  ],
+  boss:{name:"Kapten Armada Iberia",
+    questions:[
+      {q:"Manakah urutan kronologis yang benar dari peristiwa-peristiwa berikut?",
+        opts:["Perjanjian Saragosa → Jatuhnya Konstantinopel → Perjanjian Tordesilas","Jatuhnya Konstantinopel → Perjanjian Tordesilas → Perjanjian Saragosa","Perjanjian Tordesilas → Jatuhnya Konstantinopel → Perjanjian Saragosa","Perjanjian Saragosa → Perjanjian Tordesilas → Jatuhnya Konstantinopel"],
+        ans:1, explain:"Urutan yang benar: Konstantinopel jatuh (1453) → memicu penjelajahan → Perjanjian Tordesilas (1494) membagi jalur awal → sengketa di Maluku diselesaikan lewat Perjanjian Saragosa (1529)."},
+      {q:"Jika Perjanjian Tordesilas tidak pernah dibuat, dampak yang paling mungkin terjadi adalah...",
+        opts:["Portugis dan Spanyol akan langsung bersekutu menghadapi Belanda","Berpotensi terjadi konflik terbuka lebih awal antara Portugis dan Spanyol karena tumpang tindih klaim wilayah pelayaran","Turki Usmani akan menguasai Nusantara","Penjelajahan samudra tidak akan pernah terjadi"],
+        ans:1, explain:"Tordesilas dibuat justru untuk meredakan potensi konflik akibat klaim wilayah yang tumpang tindih; tanpa perjanjian ini, gesekan kepentingan kedua kerajaan besar itu lebih mungkin pecah menjadi konflik terbuka."},
+      {q:"Tokoh Spanyol yang menuntaskan pelayaran mengelilingi dunia setelah pemimpin ekspedisi sebelumnya tewas di Filipina adalah...",
+        opts:["Christopher Columbus","Juan Sebastián Elcano","Vasco da Gama","Alfonso de Albuquerque"],
+        ans:1, explain:"Setelah Magellan tewas di Mactan, Juan Sebastián Elcano (del Cano) melanjutkan pelayaran, singgah di Maluku, dan berhasil kembali ke Spanyol."},
+      {q:"Hubungan sebab-akibat yang tepat antara penaklukan Malaka (1511) dengan sejarah Nusantara adalah...",
+        opts:["Malaka menjadi ibu kota VOC pertama","Penaklukan Malaka membuka jalur Portugis untuk masuk lebih jauh ke Nusantara, termasuk mencapai Maluku","Malaka diserahkan langsung kepada Spanyol","Penaklukan Malaka mengakhiri seluruh perdagangan rempah dunia"],
+        ans:1, explain:"Malaka adalah pelabuhan transit rempah yang sangat strategis; dengan menguasainya, Portugis mendapat pijakan untuk memperluas pengaruh hingga ke Kepulauan Maluku."},
+    ]}
+},
+{
+  id:2, icon:"⚓", title:"Masa VOC",
+  subtitle:"Monopoli Dagang Belanda",
+  notes:`
+    <span class="eyebrow">BABAK II — KONGSI DAGANG RAKSASA</span>
+    <h2>VOC (Vereenigde Oostindische Compagnie)</h2>
+    <p>Untuk menghindari persaingan yang saling merugikan antarpedagang Belanda sendiri, sekaligus menghadapi persaingan
+    dengan Portugis, Spanyol, dan Inggris, pada tahun <strong>1602</strong> berbagai kongsi dagang Belanda digabung menjadi
+    satu perusahaan raksasa: <strong>VOC</strong>.</p>
+    <h4>Hak Istimewa (Hak Oktroi)</h4>
+    <p>Pemerintah Belanda memberi VOC sejumlah hak istimewa yang membuatnya nyaris berfungsi seperti sebuah negara: mencetak
+    uang sendiri, mengangkat pegawai, mengadakan perjanjian dengan penguasa lokal, memonopoli perdagangan, membentuk angkatan
+    perang sendiri, mendirikan benteng, hingga menyatakan perang dan perdamaian.</p>
+    <h4>Kebijakan Monopoli</h4>
+    <ul>
+      <li><strong>Contingenten</strong> — kewajiban rakyat membayar pajak berupa hasil bumi kepada VOC.</li>
+      <li><strong>Verplichte Leverantie</strong> — kewajiban menyerahkan hasil bumi kepada VOC dengan harga yang ditetapkan sepihak oleh VOC (jauh di bawah harga pasar).</li>
+      <li><strong>Ekstirpasi</strong> — pemusnahan/penebangan tanaman rempah yang jumlahnya melebihi ketentuan, agar harga rempah di pasaran tetap tinggi; kebijakan ini dijaga lewat patroli bersenjata yang dikenal sebagai Pelayaran Hongi.</li>
+    </ul>
+    <div class="causal">
+      <span class="lbl">SEBAB–AKIBAT KEBANGKRUTAN VOC</span>
+      <div class="chain">
+        <span class="step">Korupsi pegawai &amp; birokrasi membengkak</span><span class="arrow">→</span>
+        <span class="step">Biaya perang &amp; ekspansi wilayah tinggi</span><span class="arrow">→</span>
+        <span class="step">Persaingan dagang dari Inggris &amp; Prancis</span><span class="arrow">→</span>
+        <span class="step">Utang menumpuk, pendapatan menurun</span><span class="arrow">→</span>
+        <span class="step">VOC dibubarkan (31 Desember 1799)</span>
+      </div>
+    </div>
+    <p>Faktor internal seperti korupsi dan buruknya tata kelola berpadu dengan faktor eksternal seperti persaingan dagang
+    dan biaya peperangan yang terus membengkak, hingga akhirnya VOC resmi dibubarkan pada akhir tahun 1799 dan seluruh
+    utang serta wilayah kekuasaannya diambil alih oleh pemerintah Kerajaan Belanda.</p>
+  `,
+  quiz:[
+    {q:"Latar belakang utama pembentukan VOC pada tahun 1602 adalah...",
+      opts:["Menghindari persaingan antarpedagang Belanda sendiri dan menghadapi persaingan dengan bangsa Eropa lain","Membantu Portugis menguasai Malaka","Menyebarkan agama Kristen di Eropa","Menandingi kekuatan militer Kesultanan Mataram"],
+      ans:0, explain:"VOC dibentuk agar pedagang-pedagang Belanda tidak saling menjatuhkan harga, sekaligus mampu bersaing dengan Portugis, Spanyol, dan Inggris."},
+    {q:"Kebijakan VOC yang mewajibkan rakyat menyerahkan hasil bumi dengan harga yang ditetapkan sepihak oleh VOC disebut...",
+      opts:["Contingenten","Ekstirpasi","Verplichte Leverantie","Cultuurstelsel"],
+      ans:2, explain:"Verplichte Leverantie adalah penyerahan wajib hasil bumi dengan harga yang ditentukan sepihak oleh VOC, berbeda dengan Contingenten yang berbentuk pajak hasil bumi."},
+    {q:"Tujuan dilakukannya kebijakan Ekstirpasi oleh VOC adalah...",
+      opts:["Menambah luas lahan tanam rempah","Menjaga harga rempah tetap tinggi dengan memusnahkan kelebihan tanaman","Memberi bibit unggul kepada petani","Membangun pelabuhan baru di Maluku"],
+      ans:1, explain:"Ekstirpasi adalah pemusnahan tanaman rempah yang berlebih agar pasokan tetap terbatas dan harga di pasar internasional tidak jatuh."},
+    {q:"Berikut ini yang BUKAN merupakan hak oktroi VOC adalah...",
+      opts:["Mencetak uang sendiri","Membentuk angkatan perang sendiri","Mengangkat Gubernur Jenderal Hindia Belanda yang berkedudukan di Den Haag","Menyatakan perang dan damai dengan penguasa lokal"],
+      ans:2, explain:"Gubernur Jenderal VOC berkedudukan di Batavia (Nusantara), bukan di Den Haag; hak oktroi lainnya (mencetak uang, membentuk tentara, menyatakan perang/damai) memang benar dimiliki VOC."},
+    {q:"Faktor internal yang menyebabkan kebangkrutan VOC antara lain...",
+      opts:["Serangan wabah penyakit di Eropa","Korupsi pegawai dan birokrasi yang buruk","Ditemukannya jalur pelayaran baru oleh Spanyol","Perjanjian Saragosa yang merugikan Belanda"],
+      ans:1, explain:"Korupsi pegawai dan birokrasi yang membengkak adalah faktor internal utama, berpadu dengan faktor eksternal seperti biaya perang dan persaingan dagang."},
+  ],
+  boss:{name:"Residen Kompeni Serakah",
+    questions:[
+      {q:"Hubungan sebab-akibat yang tepat antara hak oktroi dan praktik monopoli VOC adalah...",
+        opts:["Hak oktroi hanya berlaku di Belanda sehingga tidak memengaruhi Nusantara","Hak oktroi memberi wewenang luas layaknya negara, sehingga VOC leluasa memaksakan kebijakan monopoli seperti Contingenten dan Verplichte Leverantie di wilayah kekuasaannya","Hak oktroi melarang VOC melakukan perdagangan","Hak oktroi hanya berkaitan dengan hak mencetak uang"],
+        ans:1, explain:"Karena hak oktroi memberi VOC kewenangan menyerupai negara (tentara sendiri, kekuasaan wilayah, dsb.), VOC leluasa memaksakan berbagai kebijakan monopoli kepada rakyat."},
+      {q:"Mengapa kebijakan Ekstirpasi disertai patroli Pelayaran Hongi?",
+        opts:["Untuk mengangkut rempah ke Eropa","Untuk menegakkan aturan pemusnahan tanaman rempah berlebih dan mencegah perdagangan gelap oleh penduduk lokal","Untuk mencari harta karun bajak laut","Untuk melatih angkatan laut VOC menghadapi Inggris"],
+        ans:1, explain:"Pelayaran Hongi adalah patroli bersenjata yang menegakkan kebijakan ekstirpasi, sekaligus menindak perdagangan rempah gelap di luar kendali VOC."},
+      {q:"Jika VOC tidak dibebani biaya perang dan korupsi yang besar, kemungkinan yang paling masuk akal adalah...",
+        opts:["VOC tetap akan bangkrut karena faktor eksternal semata","VOC berpeluang bertahan lebih lama karena tekanan finansial internal berkurang, meski persaingan dagang eksternal tetap menjadi ancaman","VOC akan langsung membubarkan diri secara sukarela","VOC akan menguasai seluruh Eropa"],
+        ans:1, explain:"Karena kebangkrutan VOC disebabkan gabungan faktor internal (korupsi, biaya perang) dan eksternal (persaingan dagang), berkurangnya tekanan internal akan memperpanjang usianya meski ancaman eksternal tetap ada."},
+      {q:"VOC resmi dibubarkan pada tanggal...",
+        opts:["17 Agustus 1799","31 Desember 1799","10 November 1799","1 Januari 1800"],
+        ans:1, explain:"VOC dinyatakan bubar pada 31 Desember 1799, dan seluruh aset serta utangnya diambil alih pemerintah Kerajaan Belanda."},
+    ]}
+},
+{
+  id:3, icon:"🛤️", title:"Daendels & Raffles",
+  subtitle:"Jalan Pos hingga Sewa Tanah",
+  notes:`
+    <span class="eyebrow">BABAK III — DUA GAYA PEMERINTAHAN</span>
+    <h2>Masa Pemerintahan Daendels dan Raffles</h2>
+    <h4>Herman Willem Daendels (1808–1811)</h4>
+    <p>Diutus pemerintah Belanda (di bawah bayang-bayang Prancis pimpinan Napoleon) untuk mempertahankan Jawa dari ancaman
+    invasi Inggris, Daendels dikenal karena kebijakannya yang keras. Proyek paling monumentalnya adalah pembangunan
+    <strong>Jalan Raya Pos (Grote Postweg)</strong> dari Anyer hingga Panarukan sepanjang kurang lebih 1.000 km, yang
+    dikerjakan dengan sistem <strong>kerja rodi</strong> — kerja paksa tanpa upah layak yang menelan banyak korban jiwa
+    rakyat pribumi. Selain itu, ia membangun benteng-benteng pertahanan militer di sepanjang pesisir Jawa.</p>
+    <h4>Thomas Stamford Raffles (1811–1816)</h4>
+    <p>Setelah Inggris berhasil merebut Jawa dari Belanda, Raffles ditunjuk sebagai Letnan Gubernur. Ia mengganti sistem
+    kerja paksa dengan <strong>Sistem Sewa Tanah (Landrent System)</strong>: petani dianggap menyewa tanah dari pemerintah
+    dan wajib membayar pajak sewa, umumnya berupa hasil panen atau uang. Di luar kebijakan politiknya, Raffles juga dikenal
+    sebagai peneliti — ia menulis buku <strong>"History of Java"</strong> yang menjadi sumber penting sejarah Nusantara, dan
+    menemukan (bersama Dr. Arnoldi) bunga raksasa yang kemudian dinamai <strong>Rafflesia Arnoldi</strong> di Bengkulu.</p>
+    <div class="causal">
+      <span class="lbl">SEBAB–AKIBAT</span>
+      <div class="chain">
+        <span class="step">Ancaman invasi Inggris atas Jawa</span><span class="arrow">→</span>
+        <span class="step">Daendels perkuat pertahanan &amp; bangun Jalan Pos lewat kerja rodi</span><span class="arrow">→</span>
+        <span class="step">Penderitaan rakyat meningkat, namun Jawa tetap direbut Inggris</span><span class="arrow">→</span>
+        <span class="step">Raffles berkuasa, hapus kerja rodi, terapkan Sistem Sewa Tanah</span>
+      </div>
+    </div>
+  `,
+  quiz:[
+    {q:"Tujuan utama Daendels membangun Jalan Raya Pos Anyer–Panarukan adalah...",
+      opts:["Memperlancar perdagangan rempah dengan Cina","Mempercepat mobilitas pertahanan militer untuk menghadapi ancaman invasi Inggris","Menghubungkan Batavia dengan Malaka","Membuka lahan perkebunan tebu"],
+      ans:1, explain:"Daendels ditugaskan mempertahankan Jawa dari Inggris; Jalan Raya Pos mempercepat pergerakan pasukan dan logistik militer di sepanjang Jawa."},
+    {q:"Sistem kerja yang digunakan Daendels dalam membangun Jalan Raya Pos dan sangat menyengsarakan rakyat adalah...",
+      opts:["Cultuurstelsel","Landrent System","Kerja rodi","Verplichte Leverantie"],
+      ans:2, explain:"Kerja rodi adalah kerja paksa tanpa upah layak yang digunakan Daendels, menyebabkan banyak korban jiwa di kalangan rakyat pribumi."},
+    {q:"Inti dari Sistem Sewa Tanah (Landrent) yang diterapkan Raffles adalah...",
+      opts:["Petani wajib menyerahkan 1/5 tanahnya untuk ditanami tanaman ekspor","Petani dianggap menyewa tanah dari pemerintah dan membayar pajak sewa atas tanah yang digarap","Seluruh tanah pribumi dijual kepada swasta asing","Petani bebas dari segala jenis pajak"],
+      ans:1, explain:"Landrent System menempatkan petani sebagai penyewa tanah dari pemerintah kolonial, dengan kewajiban membayar pajak sewa."},
+    {q:"Buku karya Raffles yang menjadi sumber penting sejarah dan budaya Jawa berjudul...",
+      opts:["Max Havelaar","History of Java","Insulinde","Nusa Jawa"],
+      ans:1, explain:"\"History of Java\" ditulis oleh Raffles dan menjadi salah satu sumber penting kajian sejarah serta budaya Jawa."},
+    {q:"Bunga raksasa yang ditemukan Raffles bersama Dr. Arnoldi di Bengkulu dan diabadikan dengan namanya adalah...",
+      opts:["Bunga Bangkai","Rafflesia Arnoldi","Anggrek Hitam","Teratai Raksasa"],
+      ans:1, explain:"Rafflesia Arnoldi ditemukan di Bengkulu dan namanya diabadikan dari nama Raffles serta Dr. Arnoldi."},
+  ],
+  boss:{name:"Gubernur Jenderal Berbaju Zirah",
+    questions:[
+      {q:"Perbedaan mendasar pendekatan Daendels dan Raffles dalam mengelola tenaga rakyat adalah...",
+        opts:["Keduanya sama-sama menerapkan kerja rodi","Daendels memakai kerja rodi (paksa tanpa upah layak), sedangkan Raffles menggantinya dengan sistem sewa tanah yang berbasis pajak","Daendels menghapus pajak, Raffles menaikkannya","Keduanya sama-sama menerapkan tanam paksa"],
+        ans:1, explain:"Daendels dikenal dengan kerja rodi yang keras, sementara Raffles menggantinya dengan pendekatan berbasis sewa/pajak tanah (Landrent) yang lebih 'liberal' meski tetap membebani petani."},
+      {q:"Mengapa Inggris (melalui Raffles) bisa berkuasa di Jawa pada 1811, tepat setelah masa Daendels?",
+        opts:["Daendels menyerahkan Jawa secara sukarela","Inggris berhasil merebut Jawa dari kekuasaan Belanda di tengah Perang Napoleon di Eropa","Belanda menjual Jawa kepada Inggris","VOC mengundang Inggris untuk berkuasa"],
+        ans:1, explain:"Dalam konteks Perang Napoleon di Eropa, Inggris berhasil merebut Jawa dari kendali Belanda (yang saat itu berada di bawah pengaruh Prancis), sehingga kekuasaan berpindah ke tangan Raffles."},
+      {q:"Dampak jangka panjang pembangunan Jalan Raya Pos bagi kolonial Belanda, di luar penderitaan rakyat saat pembangunannya, adalah...",
+        opts:["Mempercepat mobilitas ekonomi dan militer di Jawa untuk kepentingan penjajahan pada masa-masa berikutnya","Menghancurkan seluruh hasil pertanian Jawa","Membuat Jawa terisolasi dari pulau lain","Menghentikan seluruh perdagangan rempah"],
+        ans:0, explain:"Meski dibangun dengan kerja rodi yang menyengsarakan, jalan ini terus dimanfaatkan pemerintah kolonial untuk mempercepat distribusi logistik dan kontrol militer/ekonomi di masa-masa setelahnya."},
+      {q:"Landrent System karya Raffles kelak memberi inspirasi tidak langsung bagi kebijakan agraria kolonial berikutnya karena...",
+        opts:["Memperkenalkan gagasan bahwa tanah pribumi dapat dikenai sewa/pajak oleh penguasa kolonial, gagasan yang kemudian berkembang dalam kebijakan tanah di masa-masa sesudahnya","Menghapus total keterlibatan pemerintah dalam pertanian","Melarang penanaman tanaman ekspor","Membagikan tanah gratis kepada petani"],
+        ans:0, explain:"Prinsip bahwa tanah dapat dikenai sewa/pajak oleh penguasa kolonial menjadi salah satu gagasan yang terus berkembang dalam kebijakan agraria kolonial di masa-masa berikutnya."},
+    ]}
+},
+{
+  id:4, icon:"🌾", title:"Tanam Paksa",
+  subtitle:"Cultuurstelsel Van den Bosch",
+  notes:`
+    <span class="eyebrow">BABAK IV — LADANG PENUH AIR MATA</span>
+    <h2>Sistem Tanam Paksa (Cultuurstelsel)</h2>
+    <p>Setelah kas pemerintah Belanda kosong akibat berbagai peperangan (termasuk Perang Diponegoro) dan bangkrutnya VOC,
+    Gubernur Jenderal <strong>Johannes van den Bosch</strong> memperkenalkan Sistem Tanam Paksa pada tahun 1830 untuk
+    mengisi kembali kas negara dengan cepat lewat hasil bumi Nusantara.</p>
+    <h4>Aturan Pokok vs. Penyimpangan</h4>
+    <table style="width:100%;border-collapse:collapse;font-size:.88rem;margin:10px 0 6px;">
+      <tr style="text-align:left;border-bottom:1px solid rgba(42,29,18,.25);"><th style="padding:6px 8px 6px 0;">Aturan Pokok</th><th style="padding:6px 0;">Penyimpangan di Lapangan</th></tr>
+      <tr><td style="padding:6px 8px 6px 0;">Hanya 1/5 lahan petani yang ditanami tanaman ekspor</td><td style="padding:6px 0;">Lahan yang diambil sering lebih dari 1/5, bahkan lahan terbaik</td></tr>
+      <tr><td style="padding:6px 8px 6px 0;">Kelebihan hasil panen dikembalikan ke petani</td><td style="padding:6px 0;">Kelebihan hasil jarang dikembalikan</td></tr>
+      <tr><td style="padding:6px 8px 6px 0;">Tanah yang ditanami dibebaskan dari pajak</td><td style="padding:6px 0;">Pajak tanah tetap dipungut</td></tr>
+      <tr><td style="padding:6px 8px 6px 0;">Kegagalan panen ditanggung pemerintah</td><td style="padding:6px 0;">Kegagalan panen justru dibebankan kepada petani</td></tr>
+      <tr><td style="padding:6px 8px 6px 0;">Waktu tanam tak boleh melebihi waktu tanam padi</td><td style="padding:6px 0;">Waktu kerja sering melebihi waktu menanam padi sendiri</td></tr>
+    </table>
+    <div class="causal">
+      <span class="lbl">DAMPAK GANDA CULTUURSTELSEL</span>
+      <div class="chain">
+        <span class="step">Bagi Belanda: untung besar (Batig Slot), utang lunas, ekonomi pulih</span><span class="arrow">↔</span>
+        <span class="step">Bagi rakyat: kelaparan, kemiskinan, wabah penyakit (mis. di Cirebon &amp; Demak)</span>
+      </div>
+    </div>
+    <p>Cultuurstelsel menjadi contoh nyata bagaimana penyimpangan kebijakan di lapangan dapat memperparah dampak yang
+    sebenarnya sudah berat sejak dari aturan pokoknya sendiri, dan kelak menjadi salah satu alasan lahirnya kritik dari
+    kalangan liberal dan humanis Belanda sendiri.</p>
+  `,
+  quiz:[
+    {q:"Latar belakang utama diberlakukannya Sistem Tanam Paksa oleh Van den Bosch pada 1830 adalah...",
+      opts:["Untuk menyejahterakan petani pribumi","Untuk mengisi kembali kas pemerintah Belanda yang kosong akibat perang dan kebangkrutan VOC","Untuk menyaingi perdagangan Inggris di India","Untuk mendukung penelitian ilmiah Raffles"],
+      ans:1, explain:"Kas Belanda terkuras akibat berbagai perang (termasuk Perang Diponegoro) dan warisan utang VOC, sehingga Cultuurstelsel diberlakukan untuk memulihkan keuangan negara dengan cepat."},
+    {q:"Menurut aturan pokoknya, berapa bagian lahan petani yang seharusnya ditanami tanaman ekspor?",
+      opts:["1/2","1/3","1/5","2/5"],
+      ans:2, explain:"Aturan pokok Cultuurstelsel menetapkan hanya 1/5 bagian lahan petani yang ditanami tanaman ekspor untuk pemerintah."},
+    {q:"Salah satu bentuk penyimpangan Cultuurstelsel dari aturan pokoknya adalah...",
+      opts:["Kegagalan panen ditanggung pemerintah sebagaimana aturan","Waktu tanam yang melebihi waktu menanam padi milik sendiri","Lahan yang diambil selalu tepat 1/5 dan yang terburuk","Pajak tanah selalu dihapuskan sesuai aturan"],
+      ans:1, explain:"Dalam praktiknya, waktu kerja untuk tanaman ekspor sering melebihi waktu yang dibutuhkan menanam padi sendiri, menyimpang dari aturan pokok."},
+    {q:"Dampak Cultuurstelsel bagi pemerintah Belanda, yang dikenal dengan istilah 'Batig Slot', adalah...",
+      opts:["Kerugian besar yang harus ditanggung Belanda","Keuntungan finansial besar yang berhasil mengisi kembali kas negara Belanda","Kebangkrutan total pemerintah kolonial","Pembatalan seluruh utang VOC oleh Inggris"],
+      ans:1, explain:"Batig Slot merujuk pada surplus/keuntungan besar yang diperoleh Belanda dari hasil Cultuurstelsel, yang digunakan antara lain untuk melunasi utang."},
+    {q:"Dampak Cultuurstelsel bagi rakyat pribumi, misalnya di wilayah Cirebon dan Demak, antara lain berupa...",
+      opts:["Peningkatan kesejahteraan yang pesat","Kelaparan, kemiskinan, dan wabah penyakit","Pertumbuhan jumlah sekolah yang pesat","Penghapusan seluruh jenis pajak"],
+      ans:1, explain:"Penerapan Cultuurstelsel yang penuh penyimpangan memicu kelaparan, kemiskinan, hingga wabah penyakit di berbagai daerah, termasuk Cirebon dan Demak."},
+  ],
+  boss:{name:"Pengawas Ladang Kolonial",
+    questions:[
+      {q:"Hubungan sebab-akibat yang tepat antara penyimpangan pelaksanaan dan dampak Cultuurstelsel bagi rakyat adalah...",
+        opts:["Penyimpangan (lahan lebih dari 1/5, kegagalan panen ditanggung petani, waktu kerja berlebih) memperparah penderitaan rakyat melebihi yang sudah diperkirakan dari aturan pokoknya","Penyimpangan justru meringankan beban petani","Penyimpangan hanya terjadi di Eropa, tidak berdampak ke Nusantara","Penyimpangan membuat pemerintah Belanda merugi besar"],
+        ans:0, explain:"Penyimpangan seperti pengambilan lahan lebih dari 1/5, pembebanan gagal panen kepada petani, dan waktu kerja berlebih membuat dampak Cultuurstelsel jauh lebih berat daripada yang diatur dalam aturan pokoknya."},
+      {q:"Jika aturan pokok Cultuurstelsel benar-benar dijalankan tanpa penyimpangan, kemungkinan yang paling masuk akal adalah...",
+        opts:["Rakyat akan tetap sejahtera sepenuhnya tanpa beban apa pun","Beban rakyat akan lebih ringan dibanding kenyataan sejarah, meski tetap ada unsur kerja wajib dan potensi tekanan ekonomi","Belanda tidak akan memperoleh keuntungan sama sekali","Cultuurstelsel tidak akan pernah diberlakukan"],
+        ans:1, explain:"Aturan pokok sebenarnya memuat sejumlah perlindungan bagi petani (pengembalian kelebihan hasil, tanggungan gagal panen oleh pemerintah); tanpa penyimpangan, beban rakyat semestinya lebih ringan meski kerja wajib tetap ada."},
+      {q:"Keterkaitan antara kebangkrutan VOC (Babak II) dengan lahirnya Cultuurstelsel (Babak IV) adalah...",
+        opts:["Tidak ada hubungan sama sekali","Warisan utang dan kekosongan kas akibat pembubaran VOC turut mendorong pemerintah Belanda mencari sumber pendapatan cepat lewat Cultuurstelsel","VOC-lah yang menciptakan Cultuurstelsel","Cultuurstelsel terjadi jauh sebelum VOC berdiri"],
+        ans:1, explain:"Kekosongan kas akibat kebangkrutan VOC serta biaya perang menjadi salah satu pendorong utama diberlakukannya Cultuurstelsel sebagai sumber pendapatan cepat bagi pemerintah Belanda."},
+      {q:"Gubernur Jenderal yang mencetuskan Sistem Tanam Paksa adalah...",
+        opts:["Herman Willem Daendels","Thomas Stamford Raffles","Johannes van den Bosch","Alfonso de Albuquerque"],
+        ans:2, explain:"Johannes van den Bosch adalah Gubernur Jenderal yang memperkenalkan Cultuurstelsel pada tahun 1830."},
+    ]}
+},
+{
+  id:5, icon:"📖", title:"Pintu Terbuka & Politik Etis",
+  subtitle:"UU Agraria hingga Trias Van Deventer",
+  notes:`
+    <span class="eyebrow">BABAK V — ANGIN LIBERAL DARI EROPA</span>
+    <h2>Politik Pintu Terbuka dan Politik Etis</h2>
+    <p>Penderitaan rakyat akibat Cultuurstelsel yang penuh penyimpangan memicu kritik keras dari kalangan liberal dan
+    humanis di Belanda sendiri — salah satunya lewat novel <em>Max Havelaar</em> karya Multatuli (Eduard Douwes Dekker).
+    Tekanan ini mendorong lahirnya kebijakan baru yang lebih membuka ruang bagi modal swasta: <strong>Politik Pintu
+    Terbuka</strong>.</p>
+    <h4>UU Agraria 1870 &amp; UU Gula 1870</h4>
+    <ul>
+      <li><strong>UU Agraria 1870</strong> — membuka kesempatan bagi pengusaha swasta asing untuk menyewa tanah di Nusantara dalam jangka panjang, namun sekaligus melarang penjualan tanah milik pribumi kepada pihak asing untuk melindungi hak dasar kepemilikan tanah rakyat.</li>
+      <li><strong>UU Gula 1870</strong> — menghapus secara bertahap monopoli negara atas produksi gula dan membuka jalan bagi swastanisasi industri gula.</li>
+    </ul>
+    <h4>Politik Etis dan Trias Van Deventer</h4>
+    <p>Sebagai bentuk "politik balas budi" atas keuntungan besar yang telah dikeruk dari Cultuurstelsel, tokoh liberal
+    Belanda <strong>Conrad Theodor van Deventer</strong> mencetuskan gagasan yang dikenal sebagai <strong>Trias Van
+    Deventer</strong>, yakni tiga program balas budi:</p>
+    <ul>
+      <li><strong>Edukasi</strong> — perluasan pendidikan bagi penduduk pribumi (meski awalnya terbatas untuk kalangan elite).</li>
+      <li><strong>Irigasi</strong> — pembangunan sarana pengairan untuk mendukung pertanian rakyat.</li>
+      <li><strong>Transmigrasi</strong> — pemindahan penduduk dari daerah padat (terutama Jawa) ke daerah yang lebih jarang penduduknya.</li>
+    </ul>
+    <div class="causal">
+      <span class="lbl">DARI POLITIK ETIS MENUJU KEBANGKITAN NASIONAL</span>
+      <div class="chain">
+        <span class="step">Program Edukasi Politik Etis</span><span class="arrow">→</span>
+        <span class="step">Lahirnya kaum terpelajar pribumi</span><span class="arrow">→</span>
+        <span class="step">Kesadaran akan nasib bangsa yang terjajah</span><span class="arrow">→</span>
+        <span class="step">Lahirnya organisasi pergerakan &amp; kebangkitan nasional</span>
+      </div>
+    </div>
+    <p>Meski niatnya disebut "balas budi", pelaksanaan Politik Etis di lapangan tetap lebih banyak menguntungkan
+    kepentingan kolonial (misalnya edukasi difokuskan mencetak tenaga kerja administratif murah), namun secara tak
+    terduga program Edukasi justru menjadi salah satu <strong>pemicu lahirnya kaum terpelajar Indonesia</strong> yang
+    kelak memelopori gerakan kebangkitan nasional.</p>
+  `,
+  quiz:[
+    {q:"Salah satu pemicu lahirnya kritik terhadap Cultuurstelsel dari kalangan liberal Belanda adalah terbitnya novel...",
+      opts:["History of Java","Max Havelaar","Insulinde","Bumi Manusia"],
+      ans:1, explain:"Max Havelaar karya Multatuli (Eduard Douwes Dekker) mengkritik keras penderitaan rakyat akibat Cultuurstelsel dan turut mendorong perubahan kebijakan kolonial."},
+    {q:"Inti dari UU Agraria 1870 adalah...",
+      opts:["Melarang seluruh investasi asing di Nusantara","Membuka kesempatan sewa tanah jangka panjang bagi swasta asing, sekaligus melarang penjualan tanah pribumi kepada asing","Mewajibkan seluruh tanah diserahkan kepada VOC","Menghapus total Sistem Tanam Paksa dalam satu hari"],
+      ans:1, explain:"UU Agraria 1870 membuka pintu bagi modal swasta asing untuk menyewa tanah, namun tetap melindungi hak kepemilikan tanah pribumi dari penjualan kepada asing."},
+    {q:"Trias Van Deventer terdiri dari tiga program balas budi, yaitu...",
+      opts:["Edukasi, Irigasi, Transmigrasi","Edukasi, Industrialisasi, Imigrasi","Irigasi, Militerisasi, Transmigrasi","Edukasi, Sanitasi, Urbanisasi"],
+      ans:0, explain:"Trias Van Deventer terdiri dari Edukasi (pendidikan), Irigasi (pengairan), dan Transmigrasi (pemindahan penduduk)."},
+    {q:"Dampak tak terduga dari program Edukasi dalam Politik Etis bagi sejarah Indonesia adalah...",
+      opts:["Menghapus seluruh budaya lokal","Melahirkan kaum terpelajar pribumi yang kelak memelopori kebangkitan nasional","Membuat rakyat semakin patuh tanpa perlawanan","Menghentikan seluruh perdagangan rempah"],
+      ans:1, explain:"Meski awalnya terbatas, akses pendidikan melahirkan kaum terpelajar pribumi yang kemudian menjadi motor penggerak organisasi-organisasi pergerakan nasional."},
+    {q:"UU Gula 1870 pada dasarnya bertujuan untuk...",
+      opts:["Menambah luas lahan tanam paksa","Menghapus secara bertahap monopoli negara atas gula dan membuka jalan swastanisasi","Melarang total penanaman tebu di Jawa","Menaikkan pajak tanah bagi petani gula"],
+      ans:1, explain:"UU Gula 1870 secara bertahap menghapus monopoli negara atas produksi gula, membuka ruang bagi pengusaha swasta."},
+  ],
+  boss:{name:"Birokrat Politik Etis",
+    questions:[
+      {q:"Hubungan sebab-akibat antara penderitaan akibat Cultuurstelsel dan lahirnya Politik Pintu Terbuka adalah...",
+        opts:["Tidak ada kaitan sama sekali","Kritik keras kalangan liberal dan humanis Belanda atas penderitaan rakyat akibat Cultuurstelsel mendorong perubahan kebijakan menuju keterbukaan bagi modal swasta","Politik Pintu Terbuka justru memperberat Cultuurstelsel","Politik Pintu Terbuka terjadi jauh sebelum Cultuurstelsel"],
+        ans:1, explain:"Tekanan opini publik dan kritik dari kalangan liberal Belanda (dipicu penderitaan akibat Cultuurstelsel) menjadi salah satu pendorong utama lahirnya UU Agraria dan UU Gula 1870."},
+      {q:"Mengapa istilah 'politik balas budi' sering dianggap ironis ketika dikaitkan dengan pelaksanaan Politik Etis di lapangan?",
+        opts:["Karena Politik Etis sepenuhnya menguntungkan rakyat pribumi tanpa syarat","Karena pelaksanaannya di lapangan tetap banyak diarahkan untuk kepentingan kolonial, seperti mencetak tenaga administratif murah, meski disebut sebagai balas budi","Karena Politik Etis tidak pernah benar-benar dilaksanakan","Karena istilah ini diciptakan oleh kaum pergerakan nasional Indonesia"],
+        ans:1, explain:"Meski dibingkai sebagai balas budi, dalam praktiknya program seperti Edukasi lebih banyak diarahkan untuk mencetak tenaga kerja administratif murah bagi kepentingan kolonial."},
+      {q:"Keterkaitan antara program Edukasi Politik Etis dengan kebangkitan nasional Indonesia adalah...",
+        opts:["Program Edukasi menghasilkan kaum terpelajar yang kemudian menjadi pelopor organisasi pergerakan nasional, meski tujuan awalnya lebih untuk kepentingan administrasi kolonial","Program Edukasi langsung menciptakan kemerdekaan Indonesia","Program Edukasi dihapuskan sebelum sempat berjalan","Program Edukasi hanya berlaku bagi warga negara Belanda"],
+        ans:0, explain:"Akses pendidikan (meski terbatas dan awalnya untuk kepentingan kolonial) tanpa disengaja melahirkan kaum terpelajar pribumi yang menjadi pelopor kebangkitan nasional Indonesia."},
+      {q:"Perbedaan mendasar antara UU Agraria 1870 dengan kebijakan Cultuurstelsel sebelumnya adalah...",
+        opts:["UU Agraria menghapus total peran negara dan membuka ruang lebih besar bagi modal swasta, berbeda dengan Cultuurstelsel yang dikendalikan penuh oleh negara","Keduanya persis sama tanpa perbedaan berarti","UU Agraria memperluas kerja rodi","UU Agraria menghapus seluruh hak tanah pribumi"],
+        ans:0, explain:"Cultuurstelsel dijalankan dan dikendalikan penuh oleh negara (pemerintah kolonial), sedangkan UU Agraria 1870 membuka pintu bagi modal swasta asing untuk turut mengelola lahan."},
+    ]}
+},
+{
+  id:6, icon:"⚔️", title:"Bentuk Perlawanan",
+  subtitle:"Dari Saparua hingga Banjar",
+  notes:`
+    <span class="eyebrow">BABAK VI — API PERLAWANAN DI SELURUH NUSANTARA</span>
+    <h2>Bentuk-Bentuk Perlawanan Bangsa Indonesia</h2>
+    <p>Kebijakan monopoli, tanam paksa, hingga campur tangan politik kolonial memicu gelombang perlawanan di berbagai
+    penjuru Nusantara. Berikut lima perlawanan besar yang menandai era ini:</p>
+    <div class="figures">
+      <div class="figure-card"><div class="who">Perang Saparua (1817)</div><div class="what">Dipimpin Thomas Matulessy (Kapitan Pattimura) di Maluku, memprotes monopoli dagang dan kebijakan kerja paksa Belanda pasca kembalinya kekuasaan Belanda dari Inggris.</div></div>
+      <div class="figure-card"><div class="who">Perang Padri (1821–1837)</div><div class="what">Dipimpin Tuanku Imam Bonjol di Sumatera Barat; berawal dari konflik internal antara kaum Padri (pembaru Islam) dan kaum adat, yang kemudian berkembang menjadi perlawanan bersama terhadap campur tangan Belanda.</div></div>
+      <div class="figure-card"><div class="who">Perang Diponegoro (1825–1830)</div><div class="what">Dipimpin Pangeran Diponegoro di Jawa, dipicu antara lain oleh pematokan jalan yang melintasi tanah makam leluhurnya oleh Belanda; menjadi perang terbesar dan termahal bagi kas kolonial, berakhir lewat siasat penangkapan di Magelang.</div></div>
+      <div class="figure-card"><div class="who">Perang Aceh (1873–1904)</div><div class="what">Dipicu Traktat Sumatra yang membuka jalan bagi Belanda menyerang Aceh; berlangsung sangat panjang berkat taktik gerilya, dengan tokoh seperti Teuku Umar dan Cut Nyak Dhien.</div></div>
+      <div class="figure-card"><div class="who">Perang Banjar (1859–1905)</div><div class="what">Dipimpin Pangeran Antasari di Kalimantan Selatan, dipicu sengketa suksesi takhta Kesultanan Banjar yang dicampuri Belanda.</div></div>
+    </div>
+    <div class="causal">
+      <span class="lbl">POLA UMUM SEBAB PERLAWANAN</span>
+      <div class="chain">
+        <span class="step">Monopoli &amp; eksploitasi ekonomi (VOC, Tanam Paksa)</span><span class="arrow">+</span>
+        <span class="step">Campur tangan politik/suksesi kerajaan lokal</span><span class="arrow">+</span>
+        <span class="step">Pelanggaran adat &amp; keyakinan (mis. tanah leluhur, agama)</span><span class="arrow">→</span>
+        <span class="step">Perlawanan bersenjata di berbagai daerah</span>
+      </div>
+    </div>
+    <p>Meski masing-masing perlawanan ini pada akhirnya dapat dipatahkan oleh kekuatan militer kolonial yang lebih besar,
+    semangat dan pengalaman perlawanan ini menjadi salah satu fondasi penting bagi tumbuhnya kesadaran kebangsaan yang
+    kelak menyatu dalam pergerakan nasional Indonesia.</p>
+  `,
+  quiz:[
+    {q:"Pemimpin Perang Saparua (1817) di Maluku yang dikenal dengan sebutan Kapitan Pattimura adalah...",
+      opts:["Tuanku Imam Bonjol","Thomas Matulessy","Pangeran Antasari","Teuku Umar"],
+      ans:1, explain:"Thomas Matulessy, yang dikenal sebagai Kapitan Pattimura, memimpin Perang Saparua di Maluku pada 1817."},
+    {q:"Perang Padri pada awalnya dipicu oleh konflik antara...",
+      opts:["Pemerintah Belanda dan Kesultanan Banjar","Kaum Padri (pembaru Islam) dan kaum adat di Sumatera Barat","Portugis dan Spanyol di Maluku","Inggris dan Belanda di Jawa"],
+      ans:1, explain:"Perang Padri berawal dari konflik internal antara kaum Padri yang ingin memurnikan ajaran Islam dan kaum adat, sebelum berkembang menjadi perlawanan bersama terhadap Belanda."},
+    {q:"Salah satu pemicu Perang Diponegoro (1825–1830) adalah...",
+      opts:["Kebijakan tanam paksa di Maluku","Pematokan jalan oleh Belanda yang melintasi tanah makam leluhur Pangeran Diponegoro","Penolakan Politik Etis oleh Belanda","Sengketa suksesi Kesultanan Banjar"],
+      ans:1, explain:"Salah satu pemicu langsung Perang Diponegoro adalah pematokan jalan oleh Belanda yang melintasi tanah makam leluhur Pangeran Diponegoro tanpa izin."},
+    {q:"Tokoh perempuan yang dikenal sebagai pejuang gerilya dalam Perang Aceh adalah...",
+      opts:["Cut Nyak Dhien","Martha Christina Tiahahu","Nyi Ageng Serang","Dewi Sartika"],
+      ans:0, explain:"Cut Nyak Dhien, bersama Teuku Umar, dikenal sebagai tokoh penting dalam perlawanan gerilya rakyat Aceh melawan Belanda."},
+    {q:"Perang Banjar (1859–1905) yang dipimpin Pangeran Antasari dipicu terutama oleh...",
+      opts:["Kebijakan Cultuurstelsel di Kalimantan","Sengketa suksesi takhta Kesultanan Banjar yang dicampuri Belanda","Traktat Sumatra","Penaklukan Malaka oleh Portugis"],
+      ans:1, explain:"Perang Banjar dipicu oleh sengketa suksesi takhta Kesultanan Banjar yang turut dicampuri kepentingan Belanda."},
+  ],
+  boss:{name:"Panglima Kolonial Terakhir",
+    questions:[
+      {q:"Pola umum yang menghubungkan sebab-sebab Perang Diponegoro, Perang Padri, dan Perang Banjar adalah...",
+        opts:["Ketiganya murni dipicu persaingan dagang rempah","Ketiganya melibatkan campur tangan kolonial terhadap urusan internal (adat, suksesi, atau tanah leluhur) yang memicu perlawanan bersenjata","Ketiganya terjadi di pulau yang sama","Ketiganya dipimpin oleh tokoh yang sama"],
+        ans:1, explain:"Diponegoro (pelanggaran tanah leluhur), Padri (konflik internal yang meluas ke perlawanan Belanda), dan Banjar (sengketa suksesi) sama-sama menunjukkan pola campur tangan kolonial terhadap urusan internal masyarakat lokal."},
+      {q:"Mengapa Perang Aceh (1873–1904) berlangsung jauh lebih lama dibanding perlawanan lainnya?",
+        opts:["Karena Belanda sengaja membiarkan Aceh merdeka","Karena rakyat Aceh menggunakan taktik gerilya yang membuat Belanda kesulitan menaklukkan wilayah tersebut secara tuntas","Karena Aceh mendapat bantuan penuh dari Portugis","Karena perang ini terjadi sebelum VOC berdiri"],
+        ans:1, explain:"Taktik gerilya yang diterapkan pejuang Aceh (termasuk Teuku Umar dan Cut Nyak Dhien) membuat Belanda kesulitan menuntaskan penaklukan dalam waktu singkat, sehingga perang berlangsung puluhan tahun."},
+      {q:"Meski setiap perlawanan daerah pada akhirnya dapat dipatahkan Belanda, dampak jangka panjang paling penting dari rangkaian perlawanan ini bagi sejarah Indonesia adalah...",
+        opts:["Menghapus total pengaruh kolonial secara langsung","Menjadi fondasi pengalaman dan semangat kebangsaan yang kelak menyatu dalam pergerakan nasional Indonesia","Membuat Belanda meninggalkan Nusantara sebelum abad ke-20","Menghentikan seluruh perdagangan rempah dunia"],
+        ans:1, explain:"Meski masing-masing dapat dipatahkan secara militer, pengalaman kolektif perlawanan di berbagai daerah menjadi salah satu fondasi penting tumbuhnya kesadaran dan semangat kebangsaan Indonesia."},
+      {q:"Urutan kronologis dimulainya lima perlawanan berikut, dari yang paling awal ke paling akhir, adalah...",
+        opts:["Perang Banjar → Perang Aceh → Perang Diponegoro → Perang Padri → Perang Saparua","Perang Saparua → Perang Padri → Perang Diponegoro → Perang Banjar → Perang Aceh","Perang Aceh → Perang Banjar → Perang Diponegoro → Perang Padri → Perang Saparua","Perang Diponegoro → Perang Saparua → Perang Padri → Perang Aceh → Perang Banjar"],
+        ans:1, explain:"Urutan awal mula perlawanan: Perang Saparua (1817) → Perang Padri (1821) → Perang Diponegoro (1825) → Perang Banjar (1859) → Perang Aceh (1873)."},
+    ]}
+},
+];
+
+/* ============================================================
+   STATE
+   ============================================================ */
+const SAVE_KEY = "ekspedisiNusantaraSave_v1";
+function defaultState(){
+  const chapters = {};
+  CHAPTERS.forEach((c,i)=>{ chapters[c.id] = {quizCleared:false, bossCleared:false}; });
+  return {
+    level:1, xp:0, xpNext:80,
+    hp:100, maxHp:100,
+    energy:100, maxEnergy:100,
+    gold:0,
+    unlockedUpTo:1,
+    chapters
+  };
+}
+let state = loadState();
+function loadState(){
+  try{
+    const raw = localStorage.getItem(SAVE_KEY);
+    if(!raw) return defaultState();
+    const parsed = JSON.parse(raw);
+    const base = defaultState();
+    return Object.assign(base, parsed, {chapters:Object.assign(base.chapters, parsed.chapters||{})});
+  }catch(e){ return defaultState(); }
+}
+function saveState(){
+  try{ localStorage.setItem(SAVE_KEY, JSON.stringify(state)); }catch(e){}
+}
+
+/* ============================================================
+   UI HELPERS
+   ============================================================ */
+function $(id){return document.getElementById(id);}
+function showScreen(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  $(id).classList.add("active");
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+function clamp(v,min,max){return Math.max(min,Math.min(max,v));}
+
+function renderStats(){
+  $("statLevel").textContent = "Pangkat " + state.level;
+  $("xpText").textContent = state.xp + "/" + state.xpNext;
+  $("xpBar").style.width = clamp(state.xp/state.xpNext*100,0,100) + "%";
+  $("hpText").textContent = state.hp + "/" + state.maxHp;
+  $("hpBar").style.width = clamp(state.hp/state.maxHp*100,0,100) + "%";
+  $("enText").textContent = state.energy + "/" + state.maxEnergy;
+  $("enBar").style.width = clamp(state.energy/state.maxEnergy*100,0,100) + "%";
+  $("goldText").textContent = state.gold;
+}
+
+function showToast(msg){
+  const t = $("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"), 2200);
+}
+
+function showModal({icon, title, desc, rewardText, primaryLabel, onPrimary}){
+  const box = $("modalBox");
+  box.innerHTML = `
+    <div class="icon">${icon}</div>
+    <h3>${title}</h3>
+    <p>${desc}</p>
+    ${rewardText ? `<div class="rewards">${rewardText}</div>` : ""}
+    <button class="btn primary" id="modalPrimaryBtn">${primaryLabel}</button>
+  `;
+  $("overlay").classList.add("active");
+  $("modalPrimaryBtn").onclick = ()=>{
+    $("overlay").classList.remove("active");
+    if(onPrimary) onPrimary();
+  };
+}
+
+function grantXpGold(xp, gold){
+  state.xp += xp; state.gold += gold;
+  let leveled = false;
+  while(state.xp >= state.xpNext){
+    state.xp -= state.xpNext;
+    state.level += 1;
+    state.xpNext = Math.round(state.xpNext * 1.4);
+    state.maxHp += 10;
+    state.hp = state.maxHp;
+    state.energy = state.maxEnergy;
+    leveled = true;
+  }
+  if(leveled) showToast("⭐ Naik Pangkat! Sekarang Pangkat " + state.level);
+  renderStats();
+  saveState();
+}
+
+/* ============================================================
+   HUB
+   ============================================================ */
+function renderHub(){
+  const wrap = $("portsWrap");
+  wrap.innerHTML = "";
+  CHAPTERS.forEach((c,i)=>{
+    const unlocked = c.id <= state.unlockedUpTo;
+    const cleared = state.chapters[c.id].bossCleared;
+    const div = document.createElement("div");
+    div.className = "port " + (cleared ? "cleared" : (unlocked ? "unlocked" : "locked"));
+    div.innerHTML = `
+      <div class="num">PELABUHAN ${String(c.id).padStart(2,"0")}</div>
+      <div class="node">${unlocked ? c.icon : "🔒"}</div>
+      <div class="name">${c.title}</div>
+      <div class="tag">${cleared ? "Ditaklukkan" : (unlocked ? (state.chapters[c.id].quizCleared ? "Siap Bertempur" : "Belum Dibaca") : "Terkunci")}</div>
+    `;
+    if(unlocked){
+      div.onclick = ()=>openLogbook(c.id);
+    } else {
+      div.onclick = ()=>showToast("🔒 Taklukkan pelabuhan sebelumnya untuk membuka rute ini.");
+    }
+    wrap.appendChild(div);
+  });
+}
+function goHub(){ renderHub(); renderStats(); showScreen("screen-hub"); }
+
+/* ============================================================
+   LOGBOOK (NOTES)
+   ============================================================ */
+let currentChapterId = null;
+function openLogbook(id){
+  currentChapterId = id;
+  const c = CHAPTERS.find(x=>x.id===id);
+  $("logbookContent").innerHTML = c.notes;
+  const btn = $("btnStartQuiz");
+  btn.disabled = state.energy < 20;
+  btn.textContent = state.energy < 20 ? "Semangat tidak cukup (butuh 20)" : "Mulai Tantangan (butuh 20 Semangat) →";
+  btn.onclick = ()=>startQuiz(id);
+  showScreen("screen-notes");
+}
+
+/* ============================================================
+   QUIZ
+   ============================================================ */
+let quizSession = null;
+function startQuiz(id){
+  if(state.energy < 20){ showToast("⚡ Semangat tidak cukup. Istirahatlah dahulu."); return; }
+  state.energy -= 20; renderStats(); saveState();
+  const c = CHAPTERS.find(x=>x.id===id);
+  quizSession = {chapterId:id, qs:c.quiz, idx:0, correct:0};
+  $("quizChapterName").textContent = c.title;
+  renderQuizQuestion();
+  showScreen("screen-quiz");
+}
+function renderQuizQuestion(){
+  const s = quizSession;
+  const q = s.qs[s.idx];
+  $("quizProgress").textContent = "Soal " + (s.idx+1) + "/" + s.qs.length;
+  $("quizQuestionText").textContent = q.q;
+  const opts = $("quizOpts");
+  opts.innerHTML = "";
+  $("quizFeedback").style.display = "none";
+  $("quizNextBtn").style.display = "none";
+  q.opts.forEach((optText, i)=>{
+    const b = document.createElement("button");
+    b.className = "opt";
+    b.textContent = optText;
+    b.onclick = ()=>answerQuiz(i);
+    opts.appendChild(b);
+  });
+}
+function answerQuiz(i){
+  const s = quizSession;
+  const q = s.qs[s.idx];
+  const opts = $("quizOpts").querySelectorAll(".opt");
+  opts.forEach(o=>o.disabled = true);
+  opts[q.ans].classList.add("correct");
+  let deltaTxt = "";
+  if(i === q.ans){
+    s.correct++;
+    grantXpGold(10,5);
+    deltaTxt = "+10 XP · +5 🪙";
+    $("quizFeedback").innerHTML = `<div class="verdict ok">✔ Tepat!</div>${q.explain}<div class="deltas">${deltaTxt}</div>`;
+  } else {
+    opts[i].classList.add("wrong");
+    state.hp = clamp(state.hp - 10, 0, state.maxHp);
+    grantXpGold(2,0);
+    deltaTxt = "+2 XP · -10 Ketahanan";
+    $("quizFeedback").innerHTML = `<div class="verdict no">✘ Belum Tepat</div>${q.explain}<div class="deltas">${deltaTxt}</div>`;
+  }
+  $("quizFeedback").style.display = "block";
+  renderStats(); saveState();
+  if(state.hp <= 0){
+    $("quizNextBtn").style.display = "none";
+    setTimeout(()=>{
+      showModal({
+        icon:"😵", title:"Kelelahan!",
+        desc:"Ketahananmu habis di tengah tantangan. Kamu ditarik kembali ke markas untuk beristirahat.",
+        primaryLabel:"Kembali ke Markas",
+        onPrimary:()=>{ state.hp = Math.round(state.maxHp*0.4); saveState(); renderStats(); goHub(); }
+      });
+    }, 500);
+    return;
+  }
+  $("quizNextBtn").style.display = "inline-block";
+  $("quizNextBtn").onclick = ()=>{
+    s.idx++;
+    if(s.idx >= s.qs.length){ finishQuiz(); } else { renderQuizQuestion(); }
+  };
+}
+function finishQuiz(){
+  const s = quizSession;
+  const ratio = s.correct / s.qs.length;
+  const passed = ratio >= 0.6;
+  if(passed) state.chapters[s.chapterId].quizCleared = true;
+  saveState();
+  $("summaryTitle").textContent = passed ? "Tantangan Tuntas!" : "Masih Perlu Latihan";
+  $("summaryDesc").textContent = `Kamu menjawab benar ${s.correct} dari ${s.qs.length} soal. ` +
+    (passed ? "Kamu kini siap menghadapi Pertempuran Puncak babak ini." : "Baca ulang Buku Catatan dan coba lagi untuk membuka Pertempuran Puncak.");
+  $("btnGoBoss").style.display = passed ? "inline-block" : "none";
+  $("btnGoBoss").onclick = ()=>startBoss(s.chapterId);
+  showScreen("screen-summary");
+  renderHub();
+}
+
+/* ============================================================
+   BOSS FIGHT
+   ============================================================ */
+let bossSession = null;
+function startBoss(id){
+  if(state.energy < 30){ showToast("⚡ Semangat tidak cukup untuk Pertempuran Puncak (butuh 30)."); return; }
+  if(!state.chapters[id].quizCleared){ showToast("Selesaikan Tantangan babak ini terlebih dahulu."); return; }
+  state.energy -= 30; renderStats(); saveState();
+  const c = CHAPTERS.find(x=>x.id===id);
+  const dmgPerHit = Math.ceil(100 / c.boss.questions.length);
+  bossSession = {chapterId:id, qs:c.boss.questions, idx:0, bossHp:100, bossMaxHp:100, dmgPerHit, name:c.boss.name};
+  $("bossName").textContent = c.boss.name;
+  renderBossQuestion();
+  showScreen("screen-boss");
+}
+function renderBossHeader(){
+  const s = bossSession;
+  $("bossHpText").textContent = s.bossHp + "/" + s.bossMaxHp;
+  $("bossHpBar").style.width = clamp(s.bossHp/s.bossMaxHp*100,0,100) + "%";
+  $("playerHpText").textContent = state.hp + "/" + state.maxHp;
+  $("playerHpBar").style.width = clamp(state.hp/state.maxHp*100,0,100) + "%";
+  $("bossProgress").textContent = "Soal " + (s.idx+1) + "/" + s.qs.length;
+}
+function renderBossQuestion(){
+  renderBossHeader();
+  const s = bossSession;
+  const q = s.qs[s.idx];
+  $("bossQuestionText").textContent = q.q;
+  const opts = $("bossOpts");
+  opts.innerHTML = "";
+  $("bossFeedback").style.display = "none";
+  $("bossNextBtn").style.display = "none";
+  q.opts.forEach((optText,i)=>{
+    const b = document.createElement("button");
+    b.className = "opt";
+    b.textContent = optText;
+    b.onclick = ()=>answerBoss(i);
+    opts.appendChild(b);
+  });
+}
+function answerBoss(i){
+  const s = bossSession;
+  const q = s.qs[s.idx];
+  const opts = $("bossOpts").querySelectorAll(".opt");
+  opts.forEach(o=>o.disabled = true);
+  opts[q.ans].classList.add("correct");
+  let deltaTxt;
+  if(i === q.ans){
+    s.bossHp = clamp(s.bossHp - s.dmgPerHit, 0, s.bossMaxHp);
+    grantXpGold(20,15);
+    deltaTxt = `⚔️ -${s.dmgPerHit} HP musuh · +20 XP · +15 🪙`;
+    $("bossFeedback").innerHTML = `<div class="verdict ok">✔ Serangan Kena!</div>${q.explain}<div class="deltas">${deltaTxt}</div>`;
+  } else {
+    opts[i].classList.add("wrong");
+    state.hp = clamp(state.hp - 15, 0, state.maxHp);
+    deltaTxt = "💥 -15 Ketahanan (serangan balik musuh)";
+    $("bossFeedback").innerHTML = `<div class="verdict no">✘ Meleset!</div>${q.explain}<div class="deltas">${deltaTxt}</div>`;
+  }
+  $("bossFeedback").style.display = "block";
+  renderBossHeader();
+  saveState();
+
+  if(s.bossHp <= 0){
+    state.chapters[s.chapterId].bossCleared = true;
+    state.unlockedUpTo = Math.max(state.unlockedUpTo, s.chapterId+1);
+    grantXpGold(50,30);
+    saveState();
+    setTimeout(()=>{
+      showModal({
+        icon:"🏆", title:"Kemenangan!",
+        desc:(s.name) + " berhasil ditaklukkan. Pelabuhan berikutnya kini terbuka.",
+        rewardText:"🎁 Bonus +50 XP · +30 🪙",
+        primaryLabel:"Kembali ke Peta",
+        onPrimary: goHub
+      });
+    }, 400);
+    return;
+  }
+  if(state.hp <= 0){
+    setTimeout(()=>{
+      showModal({
+        icon:"🌊", title:"Kapal Nyaris Karam!",
+        desc:"Ketahananmu habis sebelum berhasil menaklukkan lawan. Berlayarlah kembali untuk memulihkan diri, lalu coba lagi.",
+        primaryLabel:"Kembali ke Markas",
+        onPrimary:()=>{ state.hp = Math.round(state.maxHp*0.4); saveState(); renderStats(); goHub(); }
+      });
+    }, 400);
+    return;
+  }
+
+  $("bossNextBtn").style.display = "inline-block";
+  $("bossNextBtn").onclick = ()=>{
+    s.idx++;
+    if(s.idx >= s.qs.length){
+      // ran out of questions without finishing the boss off
+      setTimeout(()=>{
+        showModal({
+          icon:"🌫️", title:"Pertempuran Belum Tuntas",
+          desc:"Amunisi pertanyaanmu habis sebelum " + s.name + " benar-benar kalah. Kumpulkan tekadmu dan coba lagi.",
+          primaryLabel:"Kembali ke Markas",
+          onPrimary: goHub
+        });
+      }, 200);
+    } else {
+      renderBossQuestion();
+    }
+  };
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+renderStats();
+renderHub();
+</script>
+</body>
+</html>
